@@ -11,6 +11,7 @@ import {
     MessageCircle,
     Check
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function UserProfile() {
     const { username } = useParams();
@@ -34,7 +35,7 @@ export default function UserProfile() {
         load();
     }, [username]);
 
-    // 🔥 FETCH FRIEND STATUS (FIXED)
+    // 🔥 FETCH FRIEND STATUS
     useEffect(() => {
         if (!user?._id) return;
 
@@ -42,9 +43,8 @@ export default function UserProfile() {
             try {
                 const { data } = await API.get(`/friends/status/${user._id}`);
                 setFriendStatus(data.status || "none");
-                console.log(data);
             } catch (err) {
-                console.log("Status error:", err);
+                toast.error("Failed to fetch status");
                 setFriendStatus("none");
             }
         };
@@ -58,30 +58,52 @@ export default function UserProfile() {
 
     // ➕ SEND REQUEST
     const sendRequest = async () => {
-        if (friendStatus === "blocked") return;
+        try {
+            if (friendStatus === "blocked") return;
 
-        await API.post("/friends/send", {
-            receiverId: user._id,
-        });
+            await API.post("/friends/send", {
+                receiverId: user._id,
+            });
 
-        setFriendStatus("sent");
+            setFriendStatus("sent");
+
+            toast.success("Friend request sent ✅");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to send request");
+        }
     };
 
     // ✅ ACCEPT
     const acceptRequest = async () => {
-        await API.post(`/friends/accept/${user._id}`);
-        setFriendStatus("friends");
+        try {
+            await API.post(`/friends/accept/${user._id}`);
+            setFriendStatus("friends");
+
+            toast.success("Friend request accepted 🎉");
+        } catch (err) {
+            toast.error("Failed to accept request");
+        }
     };
 
     // ❌ REJECT
     const rejectRequest = async () => {
-        await API.post(`/friends/reject/${user._id}`);
-        setFriendStatus("none");
+        try {
+            await API.post(`/friends/reject/${user._id}`);
+            setFriendStatus("none");
+
+            toast.success("Request rejected ❌");
+        } catch (err) {
+            toast.error("Failed to reject request");
+        }
     };
 
     // 💬 CHAT
     const openChat = () => {
-        if (friendStatus !== "friends") return;
+        if (friendStatus !== "friends") {
+            toast.error("You can only chat with friends");
+            return;
+        }
+
         router.push(`/chat?user=${user._id}`);
     };
 
@@ -112,15 +134,6 @@ export default function UserProfile() {
                     {user.bio || "No bio"}
                 </p>
 
-                {/* DOB */}
-                <div className="mt-2 text-xs text-white/60">
-                    {user.dob &&
-                        new Date(user.dob).toLocaleDateString("en-GB", {
-                            day: "numeric",
-                            month: "short",
-                        })}
-                </div>
-
                 {/* STATS */}
                 <div className="flex justify-between mt-5 text-sm text-white/80">
                     <div className="flex items-center gap-2">
@@ -140,53 +153,47 @@ export default function UserProfile() {
                 {/* ACTION */}
                 <div className="mt-6">
 
-                    {/* 👤 MY PROFILE */}
-                    {isMe && (
+                    {isMe ? (
                         <div className="flex gap-3">
-                            <button className="flex-1 bg-white text-black py-2 rounded-xl flex justify-center gap-2">
+                            <button className="flex-1 bg-white text-black py-2 rounded-xl">
                                 <Pencil size={16} /> Edit
                             </button>
 
-                            <button className="flex-1 bg-red-500 py-2 rounded-xl flex justify-center gap-2">
+                            <button className="flex-1 bg-red-500 py-2 rounded-xl">
                                 <LogOut size={16} /> Logout
                             </button>
                         </div>
-                    )}
-
-                    {/* 👥 OTHER USER */}
-                    {!isMe && (
+                    ) : (
                         <>
-                            {/* 🚫 BLOCK */}
                             {friendStatus === "blocked" && (
                                 <p className="text-center text-red-400 text-sm">
                                     You blocked this user
                                 </p>
                             )}
 
-                            {/* ✅ FRIENDS */}
                             {friendStatus === "friends" && (
-                                <div className="flex gap-3">
-                                    <button className="flex-1 bg-green-500 py-2 rounded-xl flex justify-center gap-2">
-                                        <Check size={16} /> Friends
+                                <div className="flex items-center gap-3">
+                                    <button className="flex-1 bg-green-500 py-2 rounded-xl flex items-center justify-center gap-2">
+                                        <Check size={16} />
+                                        Friends
                                     </button>
 
                                     <button
                                         onClick={openChat}
-                                        className="flex-1 bg-white text-black py-2 rounded-xl flex justify-center gap-2"
+                                        className="flex-1 bg-white text-black py-2 rounded-xl flex items-center justify-center gap-2"
                                     >
-                                        <MessageCircle size={16} /> Chat
+                                        <MessageCircle size={16} />
+                                        Chat
                                     </button>
                                 </div>
                             )}
 
-                            {/* ⏳ SENT */}
                             {friendStatus === "sent" && (
                                 <button className="w-full bg-yellow-500 py-2 rounded-xl">
                                     Requested
                                 </button>
                             )}
 
-                            {/* 📩 RECEIVED */}
                             {friendStatus === "received" && (
                                 <div className="flex gap-2">
                                     <button
@@ -204,7 +211,6 @@ export default function UserProfile() {
                                 </div>
                             )}
 
-                            {/* ➕ NONE */}
                             {friendStatus === "none" && (
                                 <button
                                     onClick={sendRequest}

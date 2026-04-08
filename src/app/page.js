@@ -6,7 +6,7 @@ import { MessageCircle, Users, Shield, Mail, Phone } from "lucide-react";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen relative text-white overflow-hidden">
+    <div className="min-h-screen relative text-white ">
 
       {/* 🌄 Background */}
       <div className="fixed inset-0 -z-10">
@@ -15,7 +15,7 @@ export default function Landing() {
       </div>
 
       {/* 🔷 TOP BRAND */}
-      <div className="bg-gray-900 flex justify-between p-4  md:px-16  gap-2">
+      <div className="bg-gray-900 sticky top-0 z-50 w-full flex justify-between p-4 md:px-16 gap-2 backdrop-blur-md">
 
         <div className="flex gap-2 items-center">
           <Image
@@ -141,6 +141,10 @@ export default function Landing() {
           </div>
 
         </div>
+      </div>
+      {/* 🔻 FOOTER */}
+      <div className="w-full text-center py-4 text-white/60 text-sm border-t border-white/10">
+        © ChatNova 2026
       </div>
     </div>
   );

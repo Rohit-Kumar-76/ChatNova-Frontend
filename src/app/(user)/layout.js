@@ -12,6 +12,7 @@ import {
     Users,
 } from "lucide-react";
 import API from "@/lib/api";
+import Image from "next/image";
 
 export default function UserLayout({ children }) {
     const router = useRouter();
@@ -104,10 +105,19 @@ export default function UserLayout({ children }) {
             {/* 💎 NAVBAR */}
             <nav className="backdrop-blur-xl bg-white/10 border-b border-white/20 
             px-6 py-3 flex items-center justify-between  top-0 z-50">
+                <div className="flex gap-2 items-center">
+                    <Image
+                        src="/chatnova.jpg"
+                        alt="ChatNova Logo"
+                        width={32}
+                        height={32}
+                        className="rounded-md"
+                    />
 
-                <h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-blue-500 bg-clip-text text-transparent">
-                    💬 ChatNova
-                </h1>
+                    <h1 className="text-lg md:text-2xl font-bold text-[#6bf4c6] ">
+                        ChatNova
+                    </h1>
+                </div>
 
                 <div className="flex items-center gap-5">
                     {/* 💻 DESKTOP NAV ICONS */}

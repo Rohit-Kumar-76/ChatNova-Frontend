@@ -13,8 +13,7 @@ import {
 
 import Avatar from "@/components/Avatar";
 import { useRouter } from "next/navigation";
-
-
+import { toast } from "sonner";
 
 export default function Home() {
     const [users, setUsers] = useState([]);
@@ -22,15 +21,22 @@ export default function Home() {
     const [search, setSearch] = useState("");
     const router = useRouter();
 
-
     const fetchUsers = async () => {
-        const { data } = await API.get(`/users/search?search=${search}`);
-        setUsers(data);
+        try {
+            const { data } = await API.get(`/users/search?search=${search}`);
+            setUsers(data);
+        } catch {
+            toast.error("Failed to fetch users");
+        }
     };
 
     const fetchRequests = async () => {
-        const { data } = await API.get("/friends/requests");
-        setRequests(data);
+        try {
+            const { data } = await API.get("/friends/requests");
+            setRequests(data);
+        } catch {
+            toast.error("Failed to fetch requests");
+        }
     };
 
     useEffect(() => {
@@ -42,14 +48,30 @@ export default function Home() {
         fetchUsers();
     }, [search]);
 
+    // ➕ SEND REQUEST
     const sendRequest = async (id) => {
-        await API.post("/friends/send", { receiverId: id });
-        fetchUsers();
+        try {
+            await API.post("/friends/send", { receiverId: id });
+
+            toast.success("Friend request sent ✅");
+
+            fetchUsers();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Request failed");
+        }
     };
 
+    // ✅ ACCEPT REQUEST
     const acceptRequest = async (id) => {
-        await API.put(`/friends/accept/${id}`);
-        setRequests((prev) => prev.filter((r) => r._id !== id));
+        try {
+            await API.put(`/friends/accept/${id}`);
+
+            setRequests((prev) => prev.filter((r) => r._id !== id));
+
+            toast.success("Request accepted 🎉");
+        } catch {
+            toast.error("Failed to accept request");
+        }
     };
 
     return (
@@ -65,14 +87,8 @@ export default function Home() {
             <div className="grid md:grid-cols-2 gap-4 lg:gap-6">
 
                 {/* 🤝 REQUESTS */}
-                <div
-                    className="backdrop-blur-2xl 
-          min-h-[120px] 
-          max-h-[400px] md:max-h-[500px] 
-          overflow-hidden 
-          bg-white/10 border border-white/20 
-          rounded-2xl p-5 shadow-xl"
-                >
+                <div className="backdrop-blur-2xl min-h-[120px] max-h-[400px] overflow-hidden bg-white/10 border border-white/20 rounded-2xl p-5 shadow-xl">
+
                     <div className="flex items-center gap-2 mb-4">
                         <UserCheck size={20} />
                         <h2 className="text-xl font-semibold">
@@ -80,7 +96,7 @@ export default function Home() {
                         </h2>
                     </div>
 
-                    <div className="space-y-3 max-h-[300px] md:max-h-[420px] overflow-y-auto pr-1 scroll-smooth">
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto">
 
                         {requests.length === 0 && (
                             <p className="text-white/60 text-sm">
@@ -89,14 +105,9 @@ export default function Home() {
                         )}
 
                         {requests.map((r) => (
-                            <div
-                                key={r._id}
-                                className="flex justify-between items-center 
-    bg-white/10 hover:bg-white/20 transition p-3 rounded-xl"
-                            >
-                                <div className="flex items-center gap-3">
+                            <div key={r._id} className="flex justify-between items-center bg-white/10 p-3 rounded-xl">
 
-                                    {/* ✅ AVATAR */}
+                                <div className="flex items-center gap-3">
                                     <div
                                         onClick={() => router.push(`/profile/${r.sender.username}`)}
                                         className="cursor-pointer"
@@ -106,7 +117,7 @@ export default function Home() {
 
                                     <span
                                         onClick={() => router.push(`/profile/${r.sender.username}`)}
-                                        className="font-medium cursor-pointer"
+                                        className="cursor-pointer"
                                     >
                                         {r.sender.username}
                                     </span>
@@ -114,7 +125,7 @@ export default function Home() {
 
                                 <button
                                     onClick={() => acceptRequest(r._id)}
-                                    className="flex items-center gap-1 bg-green-500/80 px-3 py-1 rounded-lg hover:bg-green-600 transition"
+                                    className="flex items-center gap-1 bg-green-500 px-3 py-1 rounded-lg"
                                 >
                                     <Check size={14} />
                                     Accept
@@ -124,15 +135,9 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* 🔍 FIND USERS */}
-                <div
-                    className="backdrop-blur-2xl 
-          min-h-[150px] 
-          max-h-[400px] md:max-h-[500px] 
-          overflow-hidden 
-          bg-white/10 border border-white/20 
-          rounded-2xl p-5 shadow-xl"
-                >
+                {/* 🔍 USERS */}
+                <div className="backdrop-blur-2xl min-h-[150px] max-h-[400px] overflow-hidden bg-white/10 border border-white/20 rounded-2xl p-5 shadow-xl">
+
                     <div className="flex items-center gap-2 mb-4">
                         <Users size={20} />
                         <h2 className="text-xl font-semibold">
@@ -140,7 +145,6 @@ export default function Home() {
                         </h2>
                     </div>
 
-                    {/* SEARCH */}
                     <div className="relative mb-4">
                         <Search className="absolute left-3 top-3 text-white/60" size={16} />
                         <input
@@ -148,13 +152,11 @@ export default function Home() {
                             placeholder="Search users..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/20 border border-white/30 
-              placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white"
+                            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/20 border border-white/30"
                         />
                     </div>
 
-                    {/* USERS LIST */}
-                    <div className="space-y-3 max-h-[300px] md:max-h-[420px] overflow-y-auto pr-1 scroll-smooth">
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto">
 
                         {users.length === 0 && (
                             <p className="text-white/60 text-sm">
@@ -163,14 +165,9 @@ export default function Home() {
                         )}
 
                         {users.map((u) => (
-                            <div
-                                key={u._id}
-                                className="flex justify-between items-center 
-    bg-white/10 hover:bg-white/20 transition p-3 rounded-xl"
-                            >
-                                <div className="flex items-center gap-3">
+                            <div key={u._id} className="flex justify-between items-center bg-white/10 p-3 rounded-xl">
 
-                                    {/* ✅ AVATAR */}
+                                <div className="flex items-center gap-3">
                                     <div
                                         onClick={() => router.push(`/profile/${u.username}`)}
                                         className="cursor-pointer"
@@ -178,10 +175,9 @@ export default function Home() {
                                         <Avatar src={u.profilePic} size={40} />
                                     </div>
 
-                                    {/* USERNAME */}
                                     <span
                                         onClick={() => router.push(`/profile/${u.username}`)}
-                                        className="font-medium cursor-pointer"
+                                        className="cursor-pointer"
                                     >
                                         {u.username}
                                     </span>
@@ -189,7 +185,7 @@ export default function Home() {
 
                                 <button
                                     onClick={() => sendRequest(u._id)}
-                                    className="flex items-center gap-1 bg-blue-500/80 px-3 py-1 rounded-lg hover:bg-blue-600 transition"
+                                    className="flex items-center gap-1 bg-blue-500 px-3 py-1 rounded-lg"
                                 >
                                     <UserPlus size={14} />
                                     Add

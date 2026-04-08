@@ -6,6 +6,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { toast } from "sonner";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+
 
 export default function Login() {
     const [form, setForm] = useState({ email: "", password: "" });
@@ -14,8 +17,10 @@ export default function Login() {
 
     const { login } = useAuth();
     const router = useRouter();
-
+    const [showPass, setShowPass] = useState(false);
     // ✅ Validation
+
+
     const validate = () => {
         let newErrors = {};
 
@@ -28,6 +33,12 @@ export default function Login() {
         }
 
         setErrors(newErrors);
+
+        // 🔥 toast for validation
+        if (Object.keys(newErrors).length > 0) {
+            toast.error("Please fill all fields");
+        }
+
         return Object.keys(newErrors).length === 0;
     };
 
@@ -41,12 +52,21 @@ export default function Login() {
 
         try {
             const { data } = await API.post("/auth/login", form);
+
             login(data);
+
+            toast.success("Login successful 🎉");
+
             router.push("/home");
+
         } catch (err) {
-            setErrors({
-                api: err.response?.data?.message || "Invalid credentials",
-            });
+            const msg =
+                err.response?.data?.message || "Invalid credentials";
+
+            setErrors({ api: msg });
+
+            // 🔥 ERROR TOAST
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
@@ -104,51 +124,51 @@ export default function Login() {
                     <form onSubmit={handleSubmit} className="space-y-4">
 
                         {/* Email */}
-                        <div>
+                        <div className="relative">
+                            <Mail className="absolute left-3 top-3 text-white/60" size={16} />
                             <input
                                 type="email"
                                 placeholder="Email"
-                                className={`w-full p-3 rounded-xl 
-                                bg-white/15 border 
-                                ${errors.email ? "border-red-500" : "border-white/30"} 
-                                placeholder-white/60 
-                                focus:outline-none focus:ring-2 
-                                ${errors.email ? "focus:ring-red-500" : "focus:ring-white/80"} 
-                                backdrop-blur-md transition`}
+                                className={`w-full pl-9 p-3 rounded-xl 
+        bg-white/15 border 
+        ${errors.email ? "border-red-500" : "border-white/30"} 
+        placeholder-white/60 
+        focus:outline-none focus:ring-2 
+        ${errors.email ? "focus:ring-red-500" : "focus:ring-white/80"} 
+        backdrop-blur-md transition`}
                                 onChange={(e) => {
                                     setForm({ ...form, email: e.target.value });
                                     setErrors({ ...errors, email: "", api: "" });
                                 }}
                             />
-                            {errors.email && (
-                                <p className="text-red-400 text-sm mt-1">
-                                    {errors.email}
-                                </p>
-                            )}
                         </div>
 
                         {/* Password */}
-                        <div>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-3 text-white/60" size={16} />
                             <input
-                                type="password"
+                                type={showPass ? "text" : "password"}
                                 placeholder="Password"
-                                className={`w-full p-3 rounded-xl 
-                                bg-white/15 border 
-                                ${errors.password ? "border-red-500" : "border-white/30"} 
-                                placeholder-white/60 
-                                focus:outline-none focus:ring-2 
-                                ${errors.password ? "focus:ring-red-500" : "focus:ring-white/80"} 
-                                backdrop-blur-md transition`}
+                                className={`w-full pl-9 pr-10 p-3 rounded-xl 
+        bg-white/15 border 
+        ${errors.password ? "border-red-500" : "border-white/30"} 
+        placeholder-white/60 
+        focus:outline-none focus:ring-2 
+        ${errors.password ? "focus:ring-red-500" : "focus:ring-white/80"} 
+        backdrop-blur-md transition`}
                                 onChange={(e) => {
                                     setForm({ ...form, password: e.target.value });
                                     setErrors({ ...errors, password: "", api: "" });
                                 }}
                             />
-                            {errors.password && (
-                                <p className="text-red-400 text-sm mt-1">
-                                    {errors.password}
-                                </p>
-                            )}
+
+                            {/* 👁 Toggle */}
+                            <div
+                                onClick={() => setShowPass(!showPass)}
+                                className="absolute right-3 top-3 cursor-pointer text-white/70"
+                            >
+                                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </div>
                         </div>
 
                         {/* Button */}
@@ -161,7 +181,7 @@ export default function Login() {
                             {loading ? "Logging in..." : "Login"}
                         </button>
 
-                        {/* API Error */}
+                        {/* API Error (optional UI) */}
                         {errors.api && (
                             <p className="text-red-400 text-sm text-center">
                                 {errors.api}

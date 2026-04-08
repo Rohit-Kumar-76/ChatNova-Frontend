@@ -9,9 +9,11 @@ import {
     Calendar,
     Image as ImageIcon,
     Trash2,
-    Eye
+    Eye,
+    Cake
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Profile() {
     const [user, setUser] = useState(null);
@@ -34,13 +36,17 @@ export default function Profile() {
     // 🔄 FETCH
     useEffect(() => {
         const fetchProfile = async () => {
-            const { data } = await API.get("/users/profile");
-            setUser(data);
-            setForm({
-                username: data.username,
-                bio: data.bio || "",
-                dob: data.dob ? data.dob.split("T")[0] : "",
-            });
+            try {
+                const { data } = await API.get("/users/profile");
+                setUser(data);
+                setForm({
+                    username: data.username,
+                    bio: data.bio || "",
+                    dob: data.dob ? data.dob.split("T")[0] : "",
+                });
+            } catch {
+                toast.error("Failed to load profile");
+            }
         };
         fetchProfile();
     }, []);
@@ -57,21 +63,18 @@ export default function Profile() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // 🔥 ESC CLOSE
-    useEffect(() => {
-        const handleKey = (e) => {
-            if (e.key === "Escape") setMenuOpen(false);
-        };
-
-        window.addEventListener("keydown", handleKey);
-        return () => window.removeEventListener("keydown", handleKey);
-    }, []);
-
     // 🚪 LOGOUT
     const logout = async () => {
-        await API.post("/users/logout");
-        localStorage.removeItem("user");
-        router.push("/login");
+        try {
+            await API.post("/users/logout");
+            localStorage.removeItem("user");
+
+            toast.success("Logged out successfully 👋");
+
+            router.push("/login");
+        } catch {
+            toast.error("Logout failed");
+        }
     };
 
     // 📸 IMAGE
@@ -86,53 +89,64 @@ export default function Profile() {
 
     // ✅ UPLOAD
     const uploadProfilePic = async () => {
-        const reader = new FileReader();
+        try {
+            const reader = new FileReader();
 
-        reader.onloadend = async () => {
-            const { data } = await API.put("/users/profile", {
-                profilePic: reader.result,
-            });
+            reader.onloadend = async () => {
+                const { data } = await API.put("/users/profile", {
+                    profilePic: reader.result,
+                });
 
-            setUser(data);
-            setPreview(null);
-            setPreviewModal(false);
-        };
+                setUser(data);
+                setPreview(null);
+                setPreviewModal(false);
 
-        reader.readAsDataURL(image);
+                toast.success("Profile picture updated 📸");
+            };
+
+            reader.readAsDataURL(image);
+        } catch {
+            toast.error("Failed to upload image");
+        }
     };
 
     // ❌ REMOVE
     const removeImage = async () => {
-        const { data } = await API.put("/users/profile", {
-            profilePic: "",
-        });
-        setUser(data);
+        try {
+            const { data } = await API.put("/users/profile", {
+                profilePic: "",
+            });
+
+            setUser(data);
+
+            toast.success("Profile picture removed ❌");
+        } catch {
+            toast.error("Failed to remove image");
+        }
     };
 
     // ✏ UPDATE
     const updateProfile = async () => {
-        const { data } = await API.put("/users/profile", form);
-        setUser(data);
-        setEditOpen(false);
+        try {
+            const { data } = await API.put("/users/profile", form);
+            setUser(data);
+            setEditOpen(false);
+
+            toast.success("Profile updated ✨");
+        } catch {
+            toast.error("Failed to update profile");
+        }
     };
 
     if (!user) return null;
 
-
     return (
         <div className="min-h-screen bg-black text-white lg:w-1/4 lg:mx-auto lg:pt-5">
 
-            {/* 🔝 HEADER */}
-            <div className="relative h-40 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500">
-                {/* <button
-                    onClick={logout}
-                    className="absolute cursor-pointer top-4 right-4 bg-black/40 px-3 py-1 rounded-lg text-sm"
-                >
-                    Logout
-                </button> */}
-            </div>
+            {/* HEADER */}
+            <div className="relative h-40 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500"></div>
 
-            {/* 👤 PROFILE SECTION */}
+            {/* PROFILE */}
             <div className="px-4 -mt-12">
 
                 {/* PROFILE PIC */}
@@ -156,12 +170,6 @@ export default function Profile() {
                     {menuOpen && (
                         <div className="absolute top-full mt-2 bg-white text-black rounded-xl shadow-lg w-44 overflow-hidden left-1/2 -translate-x-1/2">
 
-                            {user.profilePic && (
-                                <button className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100">
-                                    <Eye size={16} /> View
-                                </button>
-                            )}
-
                             <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer">
                                 <ImageIcon size={16} /> Upload
                                 <input type="file" hidden onChange={handleImage} />
@@ -179,7 +187,8 @@ export default function Profile() {
                     )}
                 </div>
 
-                {/* NAME */}
+                {/* INFO */}
+                {/* INFO */}
                 <div className="text-center mt-3">
                     <h2 className="text-xl font-semibold">{user.username}</h2>
                     <p className="text-sm text-white/60">{user.email}</p>
@@ -190,69 +199,64 @@ export default function Profile() {
                     {user.bio || "No bio added"}
                 </p>
 
-                {/* STATS */}
-                <div className="flex justify-around mt-5 text-sm">
-                    <div className="text-center">
-                        <p className="font-semibold">{user.friends?.length || 0}</p>
-                        <p className="text-white/60 text-xs">Friends</p>
-                    </div>
+                <div className="flex justify-around">
+                    {/* DOB */}
+                    {user.dob && (
+                        <div className="flex items-center justify-center gap-2 mt-2 text-xs text-white/60">
+                            <Cake size={14} />
+                            <span>
+                                {new Date(user.dob).toLocaleDateString("en-GB", {
+                                    day: "numeric",
+                                    month: "long",
+                                })}
+                            </span>
+                        </div>
+                    )}
 
-                    <div className="text-center">
-                        <p className="font-semibold">
+                    {/* JOINED */}
+                    <div className="flex items-center justify-center gap-2 mt-1 text-xs text-white/60">
+                        <Calendar size={14} />
+                        <span>
+                            Joined{" "}
                             {new Date(user.createdAt).toLocaleDateString("en-GB", {
-                                month: "short",
+                                month: "long",
                                 year: "numeric",
                             })}
-                        </p>
-                        <p className="text-white/60 text-xs">Joined</p>
+                        </span>
                     </div>
                 </div>
 
-                {/* ACTION BUTTONS */}
+                {/* ACTION */}
                 <div className="flex gap-3 mt-6">
                     <button
                         onClick={() => setEditOpen(true)}
-                        className="cursor-pointer flex-1 bg-white text-black py-2 rounded-xl flex items-center justify-center gap-2"
+                        className="flex-1 bg-white text-black py-2 rounded-xl flex items-center justify-center gap-2"
                     >
                         <Pencil size={16} /> Edit
                     </button>
 
                     <button
                         onClick={logout}
-                        className="cursor-pointer flex-1 bg-red-500  py-2 rounded-xl flex items-center justify-center gap-2"
+                        className="flex-1 bg-red-500 py-2 rounded-xl flex items-center justify-center gap-2"
                     >
                         <LogOut size={16} /> Logout
                     </button>
                 </div>
             </div>
-
-            {/* PREVIEW */}
-            {previewModal && (
-                <div className="fixed inset-0 bg-black/80 flex justify-center items-center">
-                    <div className="bg-white p-4 rounded-xl text-black">
-                        <img src={preview} className="w-64 h-64 object-cover rounded-lg" />
-
-                        <div className="flex justify-between mt-4 cursor-pointer">
-                            <button onClick={() => setPreviewModal(false)}>Cancel</button>
-                            <button onClick={uploadProfilePic}>Confirm</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* EDIT */}
+            {/* ✏ EDIT MODAL */}
             {editOpen && (
-                <div className="fixed inset-0 bg-black/80 flex justify-center items-center">
+                <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50">
                     <div className="bg-white p-5 rounded-xl text-black w-[300px]">
 
-                        <h2 className="font-bold mb-3 ">Edit Profile</h2>
+                        <h2 className="font-bold mb-3">Edit Profile</h2>
 
                         <input
                             value={form.username}
                             onChange={(e) =>
                                 setForm({ ...form, username: e.target.value })
                             }
-                            className="w-full border p-2 mb-2"
+                            className="w-full border p-2 mb-2 rounded"
+                            placeholder="Username"
                         />
 
                         <input
@@ -261,7 +265,7 @@ export default function Profile() {
                             onChange={(e) =>
                                 setForm({ ...form, dob: e.target.value })
                             }
-                            className="w-full border p-2 mb-2"
+                            className="w-full border p-2 mb-2 rounded"
                         />
 
                         <textarea
@@ -269,17 +273,29 @@ export default function Profile() {
                             onChange={(e) =>
                                 setForm({ ...form, bio: e.target.value })
                             }
-                            className="w-full border p-2 mb-2"
+                            className="w-full border p-2 mb-2 rounded"
+                            placeholder="Bio"
                         />
 
-                        <div className="flex justify-between cursor-pointer">
-                            <button onClick={() => setEditOpen(false)}>Cancel</button>
-                            <button onClick={updateProfile}>Save</button>
+                        <div className="flex justify-between mt-3">
+                            <button
+                                onClick={() => setEditOpen(false)}
+                                className="px-3 py-1 bg-gray-300 rounded"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={updateProfile}
+                                className="px-3 py-1 bg-black text-white rounded"
+                            >
+                                Save
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
-
         </div>
+
     );
 }
