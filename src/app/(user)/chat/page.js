@@ -54,7 +54,7 @@ export default function Chat() {
     const sendMessage = async () => {
         if (!text.trim()) return;
 
-        const receiver = await User.findById(receiverId);
+        //const receiver = await User.findById(receiverId);
 
         // if (receiver.blockedUsers.includes(req.user._id)) {
         //     return res.status(403).json({ message: "You are blocked" });
