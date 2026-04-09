@@ -4,6 +4,11 @@ import { useEffect, useState, useRef } from "react";
 import API from "@/lib/api";
 import Avatar from "@/components/Avatar";
 import { Send, ArrowLeft } from "lucide-react";
+import { socket } from "@/lib/socket";
+
+
+
+
 
 export default function Chat() {
     const [friends, setFriends] = useState([]);
@@ -13,6 +18,20 @@ export default function Chat() {
     const [currentUser, setCurrentUser] = useState(null);
 
     const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        socket.on("receiveMessage", (msg) => {
+            setMessages((prev) => [...prev, msg]);
+        });
+
+        return () => socket.off("receiveMessage");
+    }, []);
+
+    useEffect(() => {
+        if (currentUser) {
+            socket.emit("join", currentUser._id);
+        }
+    }, [currentUser]);
 
     // ✅ FIX: localStorage safe
     useEffect(() => {
@@ -50,20 +69,32 @@ export default function Chat() {
         setSelectedUser(user);
     };
 
-    // send message
+
+
     const sendMessage = async () => {
-        if (!text.trim()) return;
+        if (!text.trim() || !selectedUser) return;
 
-        //const receiver = await User.findById(receiverId);
+        // 🔥 socket send
+        socket.emit("sendMessage", {
+            senderId: currentUser._id,
+            receiverId: selectedUser._id,
+            message: text,
+        });
 
-        // if (receiver.blockedUsers.includes(req.user._id)) {
-        //     return res.status(403).json({ message: "You are blocked" });
-        // }
-
+        // optional: DB save (already hai)
         await API.post("/chat/send", {
             receiverId: selectedUser._id,
             message: text,
         });
+
+        setMessages((prev) => [
+            ...prev,
+            {
+                sender: currentUser,
+                message: text,
+                createdAt: new Date(),
+            },
+        ]);
 
         setText("");
         loadMessages(selectedUser);
