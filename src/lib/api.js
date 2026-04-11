@@ -1,4 +1,4 @@
- import axios from "axios";
+// import axios from "axios";
 
 // const API = axios.create({
 //     baseURL: "http://localhost:5000/api",
@@ -20,7 +20,7 @@
 
 //server code
 
-// import axios from "axios";
+import axios from "axios";
 
 const API = axios.create({
     baseURL: "https://chatnova-backend-og40.onrender.com/api",
