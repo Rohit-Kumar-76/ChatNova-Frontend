@@ -6,7 +6,7 @@ import { MessageCircle, Users, Shield, Mail, Phone } from "lucide-react";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen relative text-white ">
+    <div className="min-h-screen relative text-white scrollbar-hide">
 
       {/* 🌄 Background */}
       <div className="fixed inset-0 -z-10">

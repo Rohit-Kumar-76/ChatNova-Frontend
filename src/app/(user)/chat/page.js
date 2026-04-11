@@ -5,10 +5,7 @@ import API from "@/lib/api";
 import Avatar from "@/components/Avatar";
 import { Send, ArrowLeft } from "lucide-react";
 import { socket } from "@/lib/socket";
-
-
-
-
+import Link from "next/link";
 
 export default function Chat() {
     const [friends, setFriends] = useState([]);
@@ -19,6 +16,7 @@ export default function Chat() {
 
     const messagesEndRef = useRef(null);
 
+    // 📩 receive message
     useEffect(() => {
         socket.on("receiveMessage", (msg) => {
             setMessages((prev) => [...prev, msg]);
@@ -27,13 +25,14 @@ export default function Chat() {
         return () => socket.off("receiveMessage");
     }, []);
 
+    // 🔗 join socket
     useEffect(() => {
         if (currentUser) {
             socket.emit("join", currentUser._id);
         }
     }, [currentUser]);
 
-    // ✅ FIX: localStorage safe
+    // 👤 get current user
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem("user"));
         setCurrentUser(user);
@@ -48,7 +47,7 @@ export default function Chat() {
         });
     };
 
-    // fetch friends
+    // 👥 fetch friends
     useEffect(() => {
         const fetchFriends = async () => {
             const { data } = await API.get("/users/profile");
@@ -57,31 +56,28 @@ export default function Chat() {
         fetchFriends();
     }, []);
 
-    // scroll bottom
+    // 🔽 scroll bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // load messages
+    // 📥 load messages
     const loadMessages = async (user) => {
         const { data } = await API.get(`/chat/${user._id}`);
         setMessages(data);
         setSelectedUser(user);
     };
 
-
-
+    // 📤 send message
     const sendMessage = async () => {
         if (!text.trim() || !selectedUser) return;
 
-        // 🔥 socket send
         socket.emit("sendMessage", {
             senderId: currentUser._id,
             receiverId: selectedUser._id,
             message: text,
         });
 
-        // optional: DB save (already hai)
         await API.post("/chat/send", {
             receiverId: selectedUser._id,
             message: text,
@@ -100,11 +96,10 @@ export default function Chat() {
         loadMessages(selectedUser);
     };
 
-    // 🔥 important guard
     if (!currentUser) return null;
 
     return (
-        <div className="h-full  flex relative text-white overflow-hidden">
+        <div className="h-full flex relative text-white overflow-hidden">
 
             {/* 🌄 Background */}
             <div className="absolute inset-0 -z-10">
@@ -113,28 +108,24 @@ export default function Chat() {
             </div>
 
             {/* LEFT - FRIEND LIST */}
-            <div className={`${selectedUser ? "hidden md:block" : "block"}  w-full md:w-1/3 backdrop-blur-xl bg-white/10 border-r border-white/20`}>
+            <div className={`${selectedUser ? "hidden md:block" : "block"} w-full pt-2 md:w-1/3 backdrop-blur-xl bg-white/10 border-r border-white/20`}>
 
-                <h2 className="p-4 font-bold text-lg">💬 Chats</h2>
-
-                <div className="space-y-2 px-2">
+                <div className="space-y-2 px-2 overflow-y-auto scrollbar-hide">
                     {friends.map((f) => (
                         <div
                             key={f._id}
                             onClick={() => loadMessages(f)}
-                            className="flex items-center gap-3 p-3 border-2 border-gray-900 rounded-xl cursor-pointer hover:bg-white/20 transition"
+                            className="flex items-center gap-3 p-3 border-1 border-black rounded-xl cursor-pointer hover:bg-white/20 transition"
                         >
                             <Avatar src={f.profilePic} />
 
                             <div className="flex flex-col">
                                 <span className="font-medium">{f.username}</span>
 
-                                <span className={`text-xs ${f.isOnline ? "text-green-500" : "text-gray-400"
-                                    }`}>
-                                    {f.isOnline ? "● Online" : "Offline"}
+                                <span className={f.isOnline ? "text-green-400" : "text-white/40"}>
+                                    {f.isOnline ? "Online" : "Offline"}
                                 </span>
                             </div>
-
                         </div>
                     ))}
                 </div>
@@ -149,45 +140,47 @@ export default function Chat() {
 
                         <button
                             onClick={() => setSelectedUser(null)}
-                            className="md:hidden"
+                            className="md:hidden cursor-pointer"
                         >
                             <ArrowLeft />
                         </button>
 
-                        <Avatar src={selectedUser.profilePic} />
+                        <Link
+                            href={`/profile/${selectedUser.username}`}
+                            className="cursor-pointer"
+                        >
+                            <Avatar src={selectedUser.profilePic} />
+                        </Link>
 
                         <div>
                             <span className="font-bold">{selectedUser.username}</span>
 
-                            <p className={`text-xs ${selectedUser.isOnline ? "text-green-500" : "text-gray-400"
-                                }`}>
+                            <p className={`text-xs ${selectedUser.isOnline ? "text-green-500" : "text-gray-400"}`}>
                                 {selectedUser.isOnline ? "Online" : "Offline"}
                             </p>
                         </div>
                     </div>
 
                     {/* MESSAGES */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
 
                         {messages.map((m) => {
                             const isMe = m.sender._id === currentUser?._id;
 
                             return (
                                 <div
-                                    key={m._id}
+                                    key={m._id || i}
                                     className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                                 >
-                                    <div className="flex items-end gap-2 max-w-xs">
+                                    <div className="flex items-end gap-2 max-w-xs ">
 
                                         {!isMe && (
                                             <Avatar src={m.sender?.profilePic} size={26} />
-
-
                                         )}
 
                                         <div
-                                            className={`px-4 py-2 rounded-2xl shadow 
-                      ${isMe
+                                            className={`px-4 py-2 rounded-2xl shadow
+                                            ${isMe
                                                     ? "bg-blue-500 text-white rounded-br-none"
                                                     : "bg-white/90 text-black rounded-bl-none"
                                                 }`}
@@ -216,15 +209,21 @@ export default function Chat() {
                         <input
                             value={text}
                             onChange={(e) => setText(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    sendMessage();
+                                }
+                            }}
                             placeholder="Type a message..."
-                            className="flex-1 px-4 py-2 rounded-full 
-              bg-white/20 border border-white/30 
-              placeholder-white/60 outline-none"
+                            className="flex-1 px-4 py-2 rounded-full
+                            bg-white/20 border border-white/30
+                            placeholder-white/60 outline-none"
                         />
 
                         <button
                             onClick={sendMessage}
-                            className="bg-blue-500 text-white p-3 rounded-full hover:bg-blue-600 transition"
+                            className="bg-blue-500 text-white p-3 rounded-full hover:bg-blue-600 transition cursor-pointer"
                         >
                             <Send size={18} />
                         </button>

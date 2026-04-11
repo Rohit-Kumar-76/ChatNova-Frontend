@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import API from "@/lib/api";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -9,9 +9,13 @@ import {
     Users,
     Calendar,
     MessageCircle,
-    Check
+    Check,
+    MoreVertical,
+    Cake
 } from "lucide-react";
+
 import { toast } from "sonner";
+import PostCard from "@/components/PostCard";
 
 export default function UserProfile() {
     const { username } = useParams();
@@ -20,6 +24,22 @@ export default function UserProfile() {
     const [friendStatus, setFriendStatus] = useState("none");
     const [user, setUser] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
+    const [posts, setPosts] = useState([]); // ✅ FIX
+
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+    // 🔥 CLICK OUTSIDE
+    useEffect(() => {
+        const handleClick = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) {
+                setMenuOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
 
     // 🔥 LOAD USER
     useEffect(() => {
@@ -35,7 +55,23 @@ export default function UserProfile() {
         load();
     }, [username]);
 
-    // 🔥 FETCH FRIEND STATUS
+    // 🔥 FETCH POSTS
+    useEffect(() => {
+        if (!user?._id) return;
+
+        const fetchPosts = async () => {
+            try {
+                const { data } = await API.get(`/posts/user/${user._id}`);
+                setPosts(data);
+            } catch {
+                toast.error("Failed to load posts");
+            }
+        };
+
+        fetchPosts();
+    }, [user?._id]);
+
+    // 🔥 FRIEND STATUS
     useEffect(() => {
         if (!user?._id) return;
 
@@ -43,8 +79,7 @@ export default function UserProfile() {
             try {
                 const { data } = await API.get(`/friends/status/${user._id}`);
                 setFriendStatus(data.status || "none");
-            } catch (err) {
-                toast.error("Failed to fetch status");
+            } catch {
                 setFriendStatus("none");
             }
         };
@@ -56,171 +91,133 @@ export default function UserProfile() {
 
     const isMe = currentUser?._id === user?._id;
 
-    // ➕ SEND REQUEST
-    const sendRequest = async () => {
-        try {
-            if (friendStatus === "blocked") return;
-
-            await API.post("/friends/send", {
-                receiverId: user._id,
-            });
-
-            setFriendStatus("sent");
-
-            toast.success("Friend request sent ✅");
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to send request");
-        }
-    };
-
-    // ✅ ACCEPT
-    const acceptRequest = async () => {
-        try {
-            await API.post(`/friends/accept/${user._id}`);
-            setFriendStatus("friends");
-
-            toast.success("Friend request accepted 🎉");
-        } catch (err) {
-            toast.error("Failed to accept request");
-        }
-    };
-
-    // ❌ REJECT
-    const rejectRequest = async () => {
-        try {
-            await API.post(`/friends/reject/${user._id}`);
-            setFriendStatus("none");
-
-            toast.success("Request rejected ❌");
-        } catch (err) {
-            toast.error("Failed to reject request");
-        }
-    };
-
-    // 💬 CHAT
-    const openChat = () => {
-        if (friendStatus !== "friends") {
-            toast.error("You can only chat with friends");
-            return;
-        }
-
-        router.push(`/chat?user=${user._id}`);
+    const onUpdate = (id, updatedPost) => {
+        setPosts(prev =>
+            prev.map(p => (p._id === id ? updatedPost : p))
+        );
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex justify-center items-center">
+        <div className="h-screen overflow-y-auto scrollbar-hide bg-black text-white lg:w-1/3 lg:mx-auto">
 
-            <div className="w-[360px] backdrop-blur-xl bg-white/10 border border-white/20 
-            rounded-3xl p-6 shadow-2xl">
+            {/* 🔝 COVER */}
+            <div className="h-40 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 relative">
 
-                {/* PROFILE */}
-                <div className="flex gap-4 items-center">
-                    <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold overflow-hidden">
-                        {user.profilePic ? (
-                            <img src={user.profilePic} className="w-full h-full object-cover" />
-                        ) : (
-                            user.username.charAt(0).toUpperCase()
-                        )}
-                    </div>
+                <button
+                    onClick={() => router.back()}
+                    className="absolute top-4 left-4 px-4 bg-black/40 p-2 rounded-full backdrop-blur cursor-pointer"
+                >
+                    ←
+                </button>
 
-                    <div>
-                        <h2 className="text-xl font-semibold">{user.username}</h2>
-                        <p className="text-sm text-white/60">{user.email}</p>
+                <div className="absolute top-4 right-4" ref={menuRef}>
+                    <button
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        className="bg-black/40 p-2 rounded-full backdrop-blur cursor-pointer"
+                    >
+                        <MoreVertical size={20} />
+                    </button>
+                </div>
+            </div>
+
+            {/* PROFILE */}
+            <div className="px-4 -mt-12">
+
+                <div className="flex justify-center">
+                    <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-blue-500 p-[3px] z-50">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-black flex items-center justify-center text-2xl font-bold ">
+                            {user.profilePic ? (
+                                <img src={user.profilePic} className="w-full h-full object-cover" />
+                            ) : (
+                                user.username[0].toUpperCase()
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                {/* BIO */}
-                <p className="mt-4 text-sm italic text-white/80">
-                    {user.bio || "No bio"}
+                <div className="text-center mt-3">
+                    <h2 className="text-xl font-semibold">{user.username}</h2>
+                </div>
+
+                <p className="text-center mt-3 text-sm text-white/80 px-4">
+                    {user.bio || "No bio added"}
                 </p>
 
-                {/* STATS */}
-                <div className="flex justify-between mt-5 text-sm text-white/80">
-                    <div className="flex items-center gap-2">
-                        <Users size={16} />
-                        {user.friends?.length || 0}
-                    </div>
+                <div className="flex justify-center gap-8 mt-4 text-sm text-white/70">
+
+
+                    {user.dob && (
+                        <div className="flex items-center gap-2">
+                            <Cake size={16} />
+                            <span>
+                                {new Date(user.dob).toLocaleDateString("en-GB", {
+                                    day: "numeric",
+                                    month: "short",
+                                })}
+                            </span>
+                        </div>
+                    )}
+
 
                     <div className="flex items-center gap-2">
                         <Calendar size={16} />
-                        {new Date(user.createdAt).toLocaleDateString("en-GB", {
-                            month: "short",
-                            year: "numeric",
-                        })}
+                        <span>
+                            {new Date(user.createdAt).toLocaleDateString("en-GB", {
+                                month: "short",
+                                year: "numeric",
+                            })}
+                        </span>
                     </div>
+
                 </div>
 
                 {/* ACTION */}
-                <div className="mt-6">
-
+                <div className="mt-6 space-y-3">
                     {isMe ? (
-                        <div className="flex gap-3">
-                            <button className="flex-1 bg-white text-black py-2 rounded-xl">
-                                <Pencil size={16} /> Edit
+                        <>
+                            <button className="w-full py-3 rounded-xl bg-white text-black flex items-center justify-center gap-2 cursor-pointer">
+                                <Pencil size={18} /> Edit Profile
                             </button>
 
-                            <button className="flex-1 bg-red-500 py-2 rounded-xl">
-                                <LogOut size={16} /> Logout
+                            <button className="w-full py-3 rounded-xl bg-red-500 flex items-center justify-center gap-2 cursor-pointer">
+                                <LogOut size={18} /> Logout
                             </button>
-                        </div>
+                        </>
                     ) : (
                         <>
-                            {friendStatus === "blocked" && (
-                                <p className="text-center text-red-400 text-sm">
-                                    You blocked this user
-                                </p>
-                            )}
-
                             {friendStatus === "friends" && (
-                                <div className="flex items-center gap-3">
-                                    <button className="flex-1 bg-green-500 py-2 rounded-xl flex items-center justify-center gap-2">
-                                        <Check size={16} />
-                                        Friends
+                                <div className="flex gap-3">
+                                    <button className="flex-1 py-3 rounded-xl bg-green-500 flex items-center justify-center gap-2">
+                                        <Check size={18} /> Friends
                                     </button>
 
                                     <button
-                                        onClick={openChat}
-                                        className="flex-1 bg-white text-black py-2 rounded-xl flex items-center justify-center gap-2"
+                                        className="flex-1 py-3 rounded-xl bg-white text-black flex items-center justify-center gap-2 cursor-pointer"
                                     >
-                                        <MessageCircle size={16} />
-                                        Chat
-                                    </button>
-                                </div>
-                            )}
-
-                            {friendStatus === "sent" && (
-                                <button className="w-full bg-yellow-500 py-2 rounded-xl">
-                                    Requested
-                                </button>
-                            )}
-
-                            {friendStatus === "received" && (
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={acceptRequest}
-                                        className="flex-1 bg-green-500 py-2 rounded-xl"
-                                    >
-                                        Accept
-                                    </button>
-                                    <button
-                                        onClick={rejectRequest}
-                                        className="flex-1 bg-red-500 py-2 rounded-xl"
-                                    >
-                                        Reject
+                                        <MessageCircle size={18} /> Chat
                                     </button>
                                 </div>
                             )}
 
                             {friendStatus === "none" && (
-                                <button
-                                    onClick={sendRequest}
-                                    className="w-full bg-blue-500 py-2 rounded-xl"
-                                >
+                                <button className="w-full py-3 rounded-xl bg-blue-500 cursor-pointer">
                                     Add Friend
                                 </button>
                             )}
                         </>
                     )}
+                </div>
+
+                {/* POSTS */}
+                <div className="mt-6 space-y-4">
+                    {posts.map((p) => (
+                        <PostCard
+                            key={p._id}
+                            post={p}
+                            isOwner={p.user?._id === currentUser?._id} // ✅ FIX
+                            onUpdate={onUpdate}
+                        />
+                    ))}
                 </div>
             </div>
         </div>

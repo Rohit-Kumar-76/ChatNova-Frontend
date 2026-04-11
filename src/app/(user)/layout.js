@@ -24,9 +24,14 @@ export default function UserLayout({ children }) {
 
     // ✅ Load user
     useEffect(() => {
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        if (!storedUser) router.push("/login");
-        else setUser(storedUser);
+        const storedUser = localStorage.getItem("user");
+
+        if (!storedUser) {
+            router.push("/login");
+        } else {
+            const parsed = JSON.parse(storedUser);
+            setUser(parsed);
+        }
     }, []);
 
     // 🔔 Load notifications
@@ -94,7 +99,7 @@ export default function UserLayout({ children }) {
     if (!user) return null;
 
     return (
-        <div className=" overflow-hidden relative text-white pb-16 md:pb-0">
+        <div className="h-screen overflow-hidden relative text-white pb-16 md:pb-0">
 
             {/* 🌄 BACKGROUND FIXED */}
             <div className="fixed inset-0 -z-10">
@@ -103,21 +108,22 @@ export default function UserLayout({ children }) {
             </div>
 
             {/* 💎 NAVBAR */}
-            <nav className="backdrop-blur-xl bg-white/10 border-b border-white/20 
-            px-6 py-3 flex items-center justify-between  top-0 z-50">
-                <div className="flex gap-2 items-center">
-                    <Image
-                        src="/chatnova.jpg"
-                        alt="ChatNova Logo"
-                        width={32}
-                        height={32}
-                        className="rounded-md"
-                    />
+            <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/10 border-b border-white/20 px-6 py-3 flex items-center justify-between">
+                <Link href="/home">
+                    <div className="flex gap-2 items-center">
+                        <Image
+                            src="/chatnova.jpg"
+                            alt="ChatNova Logo"
+                            width={32}
+                            height={32}
+                            className="rounded-md"
+                        />
 
-                    <h1 className="text-lg md:text-2xl font-bold text-[#6bf4c6] ">
-                        ChatNova
-                    </h1>
-                </div>
+                        <h1 className="text-lg md:text-2xl font-bold text-[#6bf4c6] ">
+                            ChatNova
+                        </h1>
+                    </div>
+                </Link>
 
                 <div className="flex items-center gap-5">
                     {/* 💻 DESKTOP NAV ICONS */}
@@ -135,9 +141,7 @@ export default function UserLayout({ children }) {
                             <Users size={20} />
                         </Link>
 
-                        {/* <button onClick={logout} className="text-red-400 hover:text-red-500">
-                            <LogOut size={20} />
-                        </button> */}
+
                     </div>
 
                     {/* 🔔 Notification */}
@@ -158,7 +162,7 @@ export default function UserLayout({ children }) {
 
                     {/* Avatar */}
                     <Link href="/profile">
-                        <div className="w-9 h-9 rounded-full bg-white/20 overflow-hidden flex items-center justify-center font-bold">
+                        <div className="w-9 h-9 border-2 border-white rounded-full bg-white/20 overflow-hidden flex items-center justify-center font-bold">
 
                             {user.profilePic ? (
                                 <img
@@ -176,7 +180,7 @@ export default function UserLayout({ children }) {
             </nav>
 
             {/* 📄 CONTENT (SCROLL FIX HERE) */}
-            <div className="h-[calc(100vh-115px)] lg:h-[calc(100vh-60px)] ">
+            <div className="h-[calc(100vh-60px)] overflow-y-auto scrollbar-hide">
                 {children}
             </div>
 
@@ -196,9 +200,7 @@ export default function UserLayout({ children }) {
                     <Users size={24} />
                 </Link>
 
-                {/* <Link href="/profile">
-                    <User size={22} />
-                </Link> */}
+
             </div>
 
             {/* 🔔 NOTIFICATION SIDEBAR */}

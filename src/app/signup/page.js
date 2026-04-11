@@ -43,7 +43,7 @@ export default function Signup() {
         }
 
         if (Object.keys(newErrors).length > 0) {
-            toast.error("Please fix errors");
+            toast.error("Please Check fields");
         }
 
         return newErrors;

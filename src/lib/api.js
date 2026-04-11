@@ -1,8 +1,30 @@
-import axios from "axios";
+// import axios from "axios";
+
+// const API = axios.create({
+//     baseURL: "http://localhost:5000/api",
+// });
+
+// // 🔥 token automatically add hoga
+// API.interceptors.request.use((req) => {
+//     const user = JSON.parse(localStorage.getItem("user"));
+
+//     if (user?.token) {
+//         req.headers.Authorization = `Bearer ${user.token}`;
+//     }
+
+//     return req;
+// });
+
+// export default API;
+
+
+//server code
+
+// import axios from "axios";
 
 const API = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL + "/api",
-  withCredentials: true
+    baseURL: "https://chatnova-backend-og40.onrender.com/api",
+    withCredentials: true
 });
 
 // 🔥 token automatically add hoga

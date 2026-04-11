@@ -56,8 +56,10 @@ export default function Login() {
             login(data);
 
             toast.success("Login successful 🎉");
+            localStorage.setItem("user", JSON.stringify(data));
 
             router.push("/home");
+
 
         } catch (err) {
             const msg =
@@ -125,7 +127,7 @@ export default function Login() {
 
                         {/* Email */}
                         <div className="relative">
-                            <Mail className="absolute left-3 top-3 text-white/60" size={16} />
+                            <Mail className="absolute left-3 top-4 text-white/60" size={16} />
                             <input
                                 type="email"
                                 placeholder="Email"
@@ -145,7 +147,7 @@ export default function Login() {
 
                         {/* Password */}
                         <div className="relative">
-                            <Lock className="absolute left-3 top-3 text-white/60" size={16} />
+                            <Lock className="absolute left-3 top-4 text-white/60" size={16} />
                             <input
                                 type={showPass ? "text" : "password"}
                                 placeholder="Password"

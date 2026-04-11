@@ -24,8 +24,20 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <AuthProvider>{children}<Toaster /> </AuthProvider>
+      <body className="min-h-full flex flex-col scrollbar-hide">
+        <AuthProvider>
+          {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                fontSize: "12px",
+                padding: "8px 10px",
+                borderRadius: "10px",
+                maxWidth: "300px",
+              },
+            }}
+          /> </AuthProvider>
       </body>
     </html>
   );
