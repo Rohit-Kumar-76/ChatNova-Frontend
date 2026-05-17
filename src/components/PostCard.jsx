@@ -69,6 +69,47 @@ export default function PostCard({ post, refresh, isOwner, onUpdate }) {
         onUpdate(post._id, data); // parent me update
     };
 
+function formatPostDate(createdAt) {
+  const date = new Date(createdAt);
+  const now = new Date();
+
+  const diffMs = now - date;
+
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  // less than 1 hour
+  if (minutes < 60) {
+    return `${minutes} min ago`;
+  }
+
+  // less than 24 hours
+  if (hours < 24) {
+    return `${hours} hour ago`;
+  }
+
+  // same year
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+    })} at ${date.toLocaleTimeString("en-IN", {
+      hour: "numeric",
+      minute: "2-digit",
+    })}`;
+  }
+
+  // old year
+  return `${date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })} at ${date.toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+  })}`;
+}
+    
     return (
         <>
             <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl border border-white/10">
@@ -82,7 +123,7 @@ export default function PostCard({ post, refresh, isOwner, onUpdate }) {
                         <div>
                             <p>{post.user?.username}</p>
                             <p className="text-xs text-gray-400">
-                                {new Date(post.createdAt).toLocaleString()}
+                                {formatPostDate(post.createdAt)}
                             </p>
                         </div>
                     </Link>
