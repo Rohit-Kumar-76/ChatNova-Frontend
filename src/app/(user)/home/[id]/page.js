@@ -32,7 +32,7 @@ export default function PostDetail() {
 
     // 🔥 fetch post
     useEffect(() => {
-        setLoading(true);
+
         try {
             const fetchPost = async () => {
                 const { data } = await API.get(`/posts/${id}`);
@@ -44,9 +44,7 @@ export default function PostDetail() {
             console.log(error
             )
         }
-        finally {
-            setLoading(false);
-        }
+
     }, [id]);
 
     // 🔥 fetch comments
@@ -174,46 +172,75 @@ export default function PostDetail() {
 
     if (!post || !currentUser) return null;
 
-function formatPostDate(createdAt) {
-  const date = new Date(createdAt);
-  const now = new Date();
+    function formatPostDate(createdAt) {
+        const date = new Date(createdAt);
+        const now = new Date();
 
-  const diffMs = now - date;
+        const diffMs = now - date;
 
-  const minutes = Math.floor(diffMs / (1000 * 60));
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor(diffMs / (1000 * 60));
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
 
-  // less than 1 hour
-  if (minutes < 60) {
-    return `${minutes} min ago`;
-  }
+        // less than 1 hour
+        if (minutes < 60) {
+            return `${minutes} min ago`;
+        }
 
-  // less than 24 hours
-  if (hours < 24) {
-    return `${hours} hour ago`;
-  }
+        // less than 24 hours
+        if (hours < 24) {
+            return `${hours} hour ago`;
+        }
 
-  // same year
-  if (date.getFullYear() === now.getFullYear()) {
-    return `${date.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-    })} at ${date.toLocaleTimeString("en-IN", {
-      hour: "numeric",
-      minute: "2-digit",
-    })}`;
-  }
+        // same year
+        if (date.getFullYear() === now.getFullYear()) {
+            return `${date.toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+            })} at ${date.toLocaleTimeString("en-IN", {
+                hour: "numeric",
+                minute: "2-digit",
+            })}`;
+        }
 
-  // old year
-  return `${date.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })} at ${date.toLocaleTimeString("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-  })}`;
-}
+        // old year
+        return `${date.toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        })} at ${date.toLocaleTimeString("en-IN", {
+            hour: "numeric",
+            minute: "2-digit",
+        })}`;
+    }
+
+
+    const isLiked = post.likes?.some(
+        (id) => id.toString() === currentUser?._id
+    );
+
+    const likePost = async () => {
+        const userId = currentUser?._id;
+
+        const alreadyLiked = post.likes.some(
+            (id) => id.toString() === userId
+        );
+
+        // instant UI update
+        setPost((prev) => ({
+            ...prev,
+            likes: alreadyLiked
+                ? prev.likes.filter(
+                    (id) => id.toString() !== userId
+                )
+                : [...prev.likes, userId],
+        }));
+
+        try {
+            await API.put(`/posts/like/${post._id}`);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     return (
         <div className="h-full lg:w-1/3 mx-auto overflow-y-auto scrollbar-hide text-white p-4 space-y-4 scroll-smooth ">
@@ -222,7 +249,7 @@ function formatPostDate(createdAt) {
 
             {/* POST */}
             <div className="bg-white/10 p-3 rounded-xl">
-                 <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                     <Avatar src={post.user?.profilePic} />
                     <div>
                         <p>{post.user?.username}</p>
@@ -238,12 +265,25 @@ function formatPostDate(createdAt) {
                     <img src={post.image} className="mt-2 rounded-xl" />
                 )}
             </div>
+
+
             <div className="flex items-center gap-4 mt-2 text-sm text-gray-300">
 
                 {/* ❤️ Likes */}
-                <div className="flex items-center gap-1">
-                    <Heart /> <span>{post.likes?.length || 0}</span>
-                </div>
+                <button
+                    onClick={likePost}
+                    className={`flex items-center gap-1 transition cursor-pointer ${isLiked
+                        ? "text-red-500"
+                        : "text-gray-300 hover:text-red-400"
+                        }`}
+                >
+                    <Heart
+                        size={18}
+                        fill={isLiked ? "currentColor" : "none"}
+                    />
+
+                    <span>{post.likes?.length || 0}</span>
+                </button>
 
                 {/* 💬 Comments */}
                 <div className="flex items-center gap-1">
