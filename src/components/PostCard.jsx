@@ -17,7 +17,7 @@ export default function PostCard({ post, refresh, isOwner, onUpdate }) {
     // const [menu, setMenu] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [editText, setEditText] = useState(post.text || "");
-  
+
 
     // 🔥 current user check (for routing)
     const stored =
@@ -62,12 +62,76 @@ export default function PostCard({ post, refresh, isOwner, onUpdate }) {
         }
     };
 
-    const likePost = async () => {
-        await API.put(`/posts/like/${post._id}`);
+    const isLiked = post.likes?.some(
+        (id) => id.toString() === stored?._id
+    );
 
-        const { data } = await API.get(`/posts/${post._id}`);
-        onUpdate(post._id, data); // parent me update
+    const likePost = async () => {
+        const userId = stored?._id;
+
+        const alreadyLiked = post.likes.some(
+            (id) => id.toString() === userId
+        );
+
+        const updatedPost = {
+            ...post,
+            likes: alreadyLiked
+                ? post.likes.filter(
+                    (id) => id.toString() !== userId
+                )
+                : [...post.likes, userId],
+        };
+
+        // instant UI update
+        onUpdate(post._id, updatedPost);
+
+        try {
+            await API.put(`/posts/like/${post._id}`);
+        } catch (error) {
+            console.log(error);
+        }
     };
+
+    function formatPostDate(createdAt) {
+        const date = new Date(createdAt);
+        const now = new Date();
+
+        const diffMs = now - date;
+
+        const minutes = Math.floor(diffMs / (1000 * 60));
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+
+        // less than 1 hour
+        if (minutes < 60) {
+            return `${minutes} min ago`;
+        }
+
+        // less than 24 hours
+        if (hours < 24) {
+            return `${hours} hour ago`;
+        }
+
+        // same year
+        if (date.getFullYear() === now.getFullYear()) {
+            return `${date.toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+            })} at ${date.toLocaleTimeString("en-IN", {
+                hour: "numeric",
+                minute: "2-digit",
+            })}`;
+        }
+
+        // old year
+        return `${date.toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        })} at ${date.toLocaleTimeString("en-IN", {
+            hour: "numeric",
+            minute: "2-digit",
+        })}`;
+    }
 
     return (
         <>
@@ -82,7 +146,7 @@ export default function PostCard({ post, refresh, isOwner, onUpdate }) {
                         <div>
                             <p>{post.user?.username}</p>
                             <p className="text-xs text-gray-400">
-                                {new Date(post.createdAt).toLocaleString()}
+                                {formatPostDate(post.createdAt)}
                             </p>
                         </div>
                     </Link>
@@ -137,13 +201,29 @@ export default function PostCard({ post, refresh, isOwner, onUpdate }) {
 
                 {/* ACTION */}
                 <div className="flex gap-5 mt-3">
-                    <button className="flex gap-1 cursor-pointer hover:text-red-400 transition" onClick={likePost}>
-                        <Heart size={18} /> {post.likes?.length || 0}
+
+                    <button
+                        onClick={likePost}
+                        className={`flex gap-1 cursor-pointer transition ${isLiked
+                                ? "text-red-500"
+                                : "text-white hover:text-red-400"
+                            }`}
+                    >
+                        <Heart
+                            size={18}
+                            fill={isLiked ? "currentColor" : "none"}
+                        />
+
+                        {post.likes?.length || 0}
                     </button>
 
                     <button className="flex gap-1 cursor-pointer">
-                        <MessageCircle size={18} /> <Link href={`/home/${post?._id}`}>Comment</Link>
+                        <MessageCircle size={18} />
+                        <Link href={`/home/${post?._id}`}>
+                            Comment
+                        </Link>
                     </button>
+
                 </div>
             </div>
 

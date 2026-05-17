@@ -27,16 +27,12 @@ const API = axios.create({
     withCredentials: true
 });
 
-// 🔥 SAFE interceptor
+// 🔥 token automatically add hoga
 API.interceptors.request.use((req) => {
+    const user = JSON.parse(localStorage.getItem("user"));
 
-    // ✅ check before using localStorage
-    if (typeof window !== "undefined") {
-        const user = JSON.parse(localStorage.getItem("user"));
-
-        if (user?.token) {
-            req.headers.Authorization = `Bearer ${user.token}`;
-        }
+    if (user?.token) {
+        req.headers.Authorization = `Bearer ${user.token}`;
     }
 
     return req;

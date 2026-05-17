@@ -182,7 +182,7 @@ export default function UserLayout({ children }) {
             </nav>
 
             {/* 📄 CONTENT (SCROLL FIX HERE) */}
-            <div className="h-[calc(100vh-60px)] overflow-y-auto scrollbar-hide">
+            <div className="h-[calc(100vh-60px)] overflow-y-auto scrollbar-hide pb-10">
                 {children}
             </div>
 
