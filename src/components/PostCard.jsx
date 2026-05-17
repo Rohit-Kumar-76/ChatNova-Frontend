@@ -14,10 +14,10 @@ import { toast } from "sonner";
 import Avatar from "./Avatar";
 
 export default function PostCard({ post, refresh, isOwner, onUpdate }) {
-    const [menu, setMenu] = useState(false);
+    // const [menu, setMenu] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [editText, setEditText] = useState(post.text || "");
-    // const [posts, setPosts] = useState([]);
+  
 
     // 🔥 current user check (for routing)
     const stored =

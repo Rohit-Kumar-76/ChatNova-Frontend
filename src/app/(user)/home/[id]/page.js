@@ -6,6 +6,7 @@ import API from "@/lib/api";
 import Avatar from "@/components/Avatar";
 import { Pencil, Trash2 } from "lucide-react";
 import { Heart, MessageCircle } from "lucide-react";
+import Loader from "@/components/Loader";
 
 export default function PostDetail() {
     const { id } = useParams();
@@ -31,11 +32,21 @@ export default function PostDetail() {
 
     // 🔥 fetch post
     useEffect(() => {
-        const fetchPost = async () => {
-            const { data } = await API.get(`/posts/${id}`);
-            setPost(data);
-        };
-        if (id) fetchPost();
+        setLoading(true);
+        try {
+            const fetchPost = async () => {
+                const { data } = await API.get(`/posts/${id}`);
+                setPost(data);
+            };
+            if (id) fetchPost();
+        }
+        catch (error) {
+            console.log(error
+            )
+        }
+        finally {
+            setLoading(false);
+        }
     }, [id]);
 
     // 🔥 fetch comments
@@ -165,6 +176,8 @@ export default function PostDetail() {
 
     return (
         <div className="h-full lg:w-1/3 mx-auto overflow-y-auto scrollbar-hide text-white p-4 space-y-4 scroll-smooth ">
+
+            {loading && <Loader />}
 
             {/* POST */}
             <div className="bg-white/10 p-3 rounded-xl">

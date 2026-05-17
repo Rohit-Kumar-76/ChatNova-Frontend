@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import API from "@/lib/api";
 import { Image as ImageIcon, X } from "lucide-react";
+import { toast } from "sonner";
 
 export default function CreatePostModal({ open, setOpen, refresh }) {
     const [text, setText] = useState("");
@@ -127,7 +128,7 @@ export default function CreatePostModal({ open, setOpen, refresh }) {
                     ref={fileRef}
                     type="file"
                     hidden
-                    onChange={(e) => handleImage(e.target.files[0])}
+                    onChange={(e) => handleImage(e.target.files?.[0])}
                 />
 
                 {/* ACTIONS */}

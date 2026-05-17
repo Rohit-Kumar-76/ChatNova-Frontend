@@ -13,6 +13,7 @@ import {
     Eye,
     EyeOff
 } from "lucide-react";
+import Loader from "@/components/Loader";
 
 export default function Signup() {
     const [form, setForm] = useState({
@@ -75,6 +76,12 @@ export default function Signup() {
     return (
         <div className="min-h-screen relative flex items-center justify-center p-4">
 
+
+            {/* loading  */}
+
+            {loading && <Loader />}
+
+
             {/* BG */}
             <div className="absolute inset-0 -z-10">
                 <Image src="/bg.jpg" alt="bg" fill className="object-cover" />
@@ -113,7 +120,7 @@ export default function Signup() {
 
                         {/* USERNAME */}
                         <div className="relative">
-                            <User className="absolute left-3 top-3 text-white/60" size={16} />
+                            <User className="absolute left-3 top-3 text-white/60" size={20} />
                             <input
                                 type="text"
                                 placeholder="Username"
@@ -126,7 +133,7 @@ export default function Signup() {
 
                         {/* EMAIL */}
                         <div className="relative">
-                            <Mail className="absolute left-3 top-3 text-white/60" size={16} />
+                            <Mail className="absolute left-3 top-3 text-white/60" size={20} />
                             <input
                                 type="email"
                                 placeholder="Email"
@@ -139,7 +146,7 @@ export default function Signup() {
 
                         {/* PASSWORD */}
                         <div className="relative">
-                            <Lock className="absolute left-3 top-3 text-white/60" size={16} />
+                            <Lock className="absolute left-3 top-3 text-white/60" size={20} />
                             <input
                                 type={showPass ? "text" : "password"}
                                 placeholder="Password"
@@ -152,13 +159,13 @@ export default function Signup() {
                                 onClick={() => setShowPass(!showPass)}
                                 className="absolute right-3 top-3 cursor-pointer"
                             >
-                                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                                {showPass ? <EyeOff size={16} /> : <Eye size={20} />}
                             </div>
                         </div>
 
                         {/* CONFIRM PASSWORD */}
                         <div className="relative">
-                            <Lock className="absolute left-3 top-3 text-white/60" size={16} />
+                            <Lock className="absolute left-3 top-3 text-white/60" size={20} />
                             <input
                                 type={showConfirm ? "text" : "password"}
                                 placeholder="Confirm Password"
@@ -171,7 +178,7 @@ export default function Signup() {
                                 onClick={() => setShowConfirm(!showConfirm)}
                                 className="absolute right-3 top-3 cursor-pointer"
                             >
-                                {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                                {showConfirm ? <EyeOff size={16} /> : <Eye size={20} />}
                             </div>
                         </div>
 

@@ -116,6 +116,8 @@ export default function UserLayout({ children }) {
                             alt="ChatNova Logo"
                             width={32}
                             height={32}
+                            // loading="eager"
+                            priority
                             className="rounded-md"
                         />
 

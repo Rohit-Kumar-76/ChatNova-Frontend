@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import Loader from "@/components/Loader";
 
 
 export default function Login() {
@@ -77,12 +78,18 @@ export default function Login() {
     return (
         <div className="min-h-screen relative flex items-center justify-center">
 
+
+
+            {/* //loading  */}
+            {loading && <Loader />}
+
             {/* 🌄 Background */}
             <div className="absolute inset-0 -z-10">
                 <Image
                     src="/bg2.jpg"
                     alt="background"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60"></div>

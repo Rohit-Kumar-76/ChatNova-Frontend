@@ -6,6 +6,7 @@ import { Search, UserPlus } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Loader from "@/components/Loader";
 
 const Explore = () => {
     const [allUsers, setAllUsers] = useState([]);
@@ -29,8 +30,9 @@ const Explore = () => {
             setPage(1);
         } catch {
             toast.error("Failed to fetch users");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     // 🔁 Debounce search
@@ -94,7 +96,9 @@ const Explore = () => {
     };
 
     return (
-        <div className="lg:w-1/3 mx-auto min-h-screen text-white p-4">
+        <div className="lg:w-1/3 mx-auto min-h-screen text-white p-4 border-1">
+
+            {loading && <Loader />}
 
             {/* 🔍 SEARCH */}
             <div className="sticky top-0 z-10 backdrop-blur-xl bg-black/40 p-3 rounded-xl mb-4">

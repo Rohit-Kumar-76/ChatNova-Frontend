@@ -22,7 +22,7 @@ export default function Feed() {
     return (
         <div className="p-3 space-y-4 text-white">
 
-            {/* 🔥 CREATE POST */}
+          
             <div
                 onClick={() => setOpen(true)}
                 className="bg-white/10 backdrop-blur-xl p-3 rounded-xl 

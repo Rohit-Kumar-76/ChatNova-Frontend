@@ -83,7 +83,7 @@ export default function Profile() {
     const logout = async () => {
         await API.post("/users/logout");
         localStorage.removeItem("user");
-        router.push("/login");
+        router.push("/");
     };
 
     const changePassword = async () => {

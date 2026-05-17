@@ -5,13 +5,15 @@ import API from "@/lib/api";
 import PostCard from "@/components/PostCard";
 import CreatePostModal from "@/components/CreatePostModal";
 import { PlusSquare } from "lucide-react";
+import Loader from "@/components/Loader";
 
 export default function Feed() {
     const [posts, setPosts] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    // 🔥 get current user
+    // 🔥 get current users
     useEffect(() => {
         const stored = localStorage.getItem("user");
         if (stored) setCurrentUser(JSON.parse(stored));
@@ -19,8 +21,18 @@ export default function Feed() {
 
     // 🔥 fetch posts
     const fetchPosts = async () => {
-        const { data } = await API.get("/posts");
-        setPosts(data);
+        setLoading(true);
+        try {
+            const { data } = await API.get("/posts");
+            setPosts(data);
+        }
+        catch (error) {
+            console.error(error);
+        }
+        finally {
+            setLoading(false);
+        }
+
     };
 
     useEffect(() => {
@@ -41,7 +53,11 @@ export default function Feed() {
 
 
     return (
-        <div className="lg:w-1/2 mx-auto p-3 space-y-4 text-white h-full overflow-y-auto scrollbar-hide pb-5">
+        <div className="lg:w-1/2 mx-auto p-3 space-y-4 text-white h-full overflow-y-auto scrollbar-hide pb-10">
+
+            {/* loading */}
+
+            {loading && <Loader />}
 
             {/* CREATE POST */}
             <div
